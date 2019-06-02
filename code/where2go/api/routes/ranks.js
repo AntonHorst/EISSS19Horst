@@ -40,39 +40,56 @@ router.get('/',(req, res, next) => {
     })
 });
 
-router.post('/',(req, res, next) => {
-    console.log(req.body);
-    Product.findOne({ name: req.body.name})
-    .exec()
-    const rank = new Rank({
-        _id: new mongoose.Types.ObjectId(),
-        score: req.body.score,
-        name: req.body.name,
-    })
-    rank.save()
-    .then(result =>{
-        //Rank.findOne({})
-       // Reise.findOne({})
-        console.log(result);
-        res.status(201).json({
-            message: 'Ranking erstellt',
-            erstellterRank : {
-                score: result.score,
-                _id: result._id,
-                name: result.name,
-                request: {
-                    type:'GET',
-                    url: 'http://localhost:3000/ranks/' + result._id
-                }
-            }
-        });    
-    })
-    .catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err
+router.post('/', (req, res, next) => {
+    var neuerScore=20;
+    Frage.findOne({name: req.body.name})
+    Frage.findOne({antwort1: req.body.antwort1})
+    Reise.findOne({kultur: req.body.kultur})
+    .then(frage =>{
+        if(!frage){
+            return res.status(404).json({
+                message:"Frage nicht gefunden"
+            });
+        }
+
+        const rank = new Rank({
+            _id: mongoose.Types.ObjectId(),
+            score: req.body.score,
+            name: req.body.name,
+            antwort1: req.body.antwort1,
+            kultur: req.body.kultur,
+        });
+        return rank
+        .save()
         
-        })
+        .then(result =>{
+            neuerScore= result.neuerScore=20;
+            if(neuerScore===20){
+                neuerScore=neuerScore*4
+            }
+            console.log(result);
+            res.status(201).json({
+                message:'Ranking gespeichert',
+                ErstelltesRanking: {
+                    _id: result._id,
+                    score: result.score,
+                    name: result.name,
+                    antwort1: result.antwort1,
+                    kultur: result.kultur,
+                    neuerScore: neuerScore,
+                },
+                request:{
+                    type: 'GET',
+                    url: 'http://localhost:3000/ranks/'+result._id
+                }
+            })
+    })
+    })
+    .catch(err =>{
+    console.log(err);
+    res.status(500).json({
+        error: err
+        });
     });
 });
 
